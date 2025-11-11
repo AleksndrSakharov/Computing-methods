@@ -92,7 +92,7 @@ class Computing:
                 if row != -1:
                     cost += val
                     assigned_rows.add(row)
-                    
+
             else:
                 val, row = self.FindMinInColumnWhithExclitedRows(i, assigned_rows)
                 if row != -1:
@@ -101,7 +101,7 @@ class Computing:
 
         return cost
     
-    def Threfty_GreedMetodX(self, x):
+    def Threfty_GreedyMetodX(self, x):
         cost = 0
         shapes = self.__params.shape
         assigned_rows = set()
