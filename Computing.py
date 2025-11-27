@@ -26,27 +26,38 @@ class Computing:
         return max_val, mat_max_id
 
     @accessify.private
-    def FindMinInColumnWithExclitedRows(self, column_id, excluded_rows):
-        matrix = np.copy(self.__params)
-        col = matrix[:, column_id]
+    def FindKMinInColumnWithExclitedRows(self, column_id, excluded_rows, k=1):
+        col =  np.asarray(self.__params)[:, column_id]
+        n = col.shape[0]
 
         mask = np.ones(len(col), bool)
         excluded_indices = [int(idx) for idx in excluded_rows]
         mask[excluded_indices] = False
 
+        avail_idx = np.nonzero(mask)[0]
         filtered_columns = col[mask]
 
-        min_val = np.min(filtered_columns)
+        k = min(k, len(filtered_columns))
 
-        avel_min = np.where(mask)[0]
-        min_filt_id = np.argmin(filtered_columns)
-        mat_min_id = avel_min[min_filt_id]
 
-        return min_val, mat_min_id
+        if k == 1:
+            min_pos = int(np.argmin(filtered_columns))
+            return filtered_columns[min_pos], int(avail_idx[min_pos])
+
+        kth_value = np.partition(filtered_columns, k - 1)[k - 1]
+        idx_k_small = np.argpartition(filtered_columns, k - 1)[:k]
+        small_values = filtered_columns[idx_k_small]
     
+        eq_positions = np.nonzero(small_values == kth_value)[0]
+        if eq_positions.size > 0:
+            chosen_local = int(idx_k_small[eq_positions[0]])
+        else:
+            chosen_local = int(idx_k_small[np.argmax(small_values)])
+
+        return kth_value, int(avail_idx[chosen_local])
+
     def HungarianMinimum(self):
         row_ind, col_ind = scipy.optimize.linear_sum_assignment(self.__params)
-        # Sort by column index to simulate "stages"
         sorted_indices = np.argsort(col_ind)
         row_ind = row_ind[sorted_indices]
         col_ind = col_ind[sorted_indices]
@@ -58,7 +69,6 @@ class Computing:
     def HungarianMaximum(self):
         matrix = -self.__params.copy()
         row_ind, col_ind = scipy.optimize.linear_sum_assignment(matrix)
-        # Sort by column index
         sorted_indices = np.argsort(col_ind)
         row_ind = row_ind[sorted_indices]
         col_ind = col_ind[sorted_indices]
@@ -74,7 +84,7 @@ class Computing:
         values = []
 
         for i in range(shapes[0]):
-            min_val, row = self.FindMinInColumnWithExclitedRows(i, assigned_rows)
+            min_val, row = self.FindKMinInColumnWithExclitedRows(i, assigned_rows)
             cost += min_val
             assigned_rows.add(row)
             values.append(min_val)
@@ -112,7 +122,7 @@ class Computing:
                     values.append(val)
 
             else:
-                val, row = self.FindMinInColumnWithExclitedRows(i, assigned_rows)
+                val, row = self.FindKMinInColumnWithExclitedRows(i, assigned_rows)
                 if row != -1:
                     cost += val
                     assigned_rows.add(row)
@@ -128,7 +138,7 @@ class Computing:
 
         for i in range(shapes[1]):
             if i < x:
-                val, row = self.FindMinInColumnWithExclitedRows(i, assigned_rows)
+                val, row = self.FindKMinInColumnWithExclitedRows(i, assigned_rows)
                 if row != -1:
                     cost += val
                     assigned_rows.add(row)
@@ -141,4 +151,27 @@ class Computing:
                     assigned_rows.add(row)
                     values.append(val)
 
+        return cost, np.array(values)
+
+    def TkG_MethodX(self, x, k):
+        cost = 0
+        shapes = self.__params.shape
+        assigned_rows = set()
+        values = []
+
+        for i in range(shapes[1]):
+            if i < x:
+                val, row = self.FindKMinInColumnWithExclitedRows(i, assigned_rows, k)
+                if row != -1:
+                    cost += val
+                    assigned_rows.add(row)
+                    values.append(val)
+
+            else:
+                val, row = self.FindMaxInColumnWithExclitedRows(i, assigned_rows)
+                if row != -1:
+                    cost += val
+                    assigned_rows.add(row)
+                    values.append(val)
+        
         return cost, np.array(values)
