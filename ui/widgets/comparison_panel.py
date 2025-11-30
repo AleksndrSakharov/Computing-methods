@@ -1,7 +1,8 @@
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSpinBox, QLabel, 
-    QGroupBox, QFormLayout, QProgressBar, QDoubleSpinBox, QCheckBox, QTabWidget
+    QGroupBox, QFormLayout, QProgressBar, QDoubleSpinBox, QCheckBox, QTabWidget,
+    QComboBox, QStackedWidget, QTextEdit
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import matplotlib.pyplot as plt
@@ -31,12 +32,6 @@ class Worker(QThread):
         deg_min = self.params['deg_min']
         deg_max = self.params['deg_max']
         
-        use_condition = self.params['use_condition']
-        condition_type = self.params['condition_type']
-        cond_transition = self.params['cond_transition']
-        cond_min = self.params['cond_min']
-        cond_max = self.params['cond_max']
-
         # Initialize accumulators for cumulative sums
         results = {
             'HungarianMin': np.zeros(size),
@@ -57,12 +52,7 @@ class Worker(QThread):
                 sugar_min=sugar_min,
                 sugar_max=sugar_max,
                 deg_min=deg_min,
-                deg_max=deg_max,
-                use_condition=use_condition,
-                condition_type=condition_type,
-                transition=cond_transition,
-                cond_min=cond_min,
-                cond_max=cond_max
+                deg_max=deg_max
             )
             
             comp = Computing.Computing(matrix)
@@ -88,11 +78,11 @@ class Worker(QThread):
             add_cum_sum('Greedy', values)
 
             # Greedy -> Thrifty
-            _, values = comp.Greedy_ThreftyMetodX(transition)
+            _, values = comp.Greedy_ThriftyMethodX(transition)
             add_cum_sum('GreedyThrifty', values)
 
             # Thrifty -> Greedy
-            _, values = comp.Threfty_GreedyMetodX(transition)
+            _, values = comp.Thrifty_GreedyMethodX(transition)
             add_cum_sum('ThriftyGreedy', values)
 
             self.progress.emit(int((i + 1) / experiments * 100))
@@ -111,7 +101,7 @@ class ComparisonPanel(QWidget):
         # --- Settings Panel ---
         self.settings_panel = QWidget()
         self.settings_panel.setObjectName("comparisonSettingsPanel") # For specific styling
-        self.settings_panel.setFixedWidth(400) # Increased width further
+        self.settings_panel.setMinimumWidth(450) # Use minimum width instead of fixed
         self.settings_layout = QVBoxLayout(self.settings_panel)
         
         # GroupBox for Main Parameters
@@ -182,134 +172,80 @@ class ComparisonPanel(QWidget):
         
         self.settings_layout.addWidget(self.params_group)
         
-        # GroupBox for Additional Conditions
-        self.cond_group = QGroupBox("Дополнительные условия")
-        self.cond_layout = QVBoxLayout(self.cond_group)
-        
-        self.check_condition = QCheckBox("Учитывать доп. условие")
-        self.check_condition.setObjectName("chk_condition") # For styling
-        self.check_condition.setCursor(Qt.PointingHandCursor)
-        self.cond_layout.addWidget(self.check_condition)
-        
-        self.cond_tabs = QTabWidget()
-        self.cond_tabs.setEnabled(False)
-        self.check_condition.toggled.connect(self.cond_tabs.setEnabled)
-        
-        # Tab 1: Inorganic
-        self.tab_inorganic = QWidget()
-        self.inorg_layout = QFormLayout(self.tab_inorganic)
-        
-        self.spin_inorg_trans = QSpinBox()
-        self.spin_inorg_trans.setRange(1, 100)
-        self.spin_inorg_trans.setValue(7)
-        
-        self.inorg_range_layout = QHBoxLayout()
-        self.spin_inorg_min = QDoubleSpinBox()
-        self.spin_inorg_min.setRange(0, 2)
-        self.spin_inorg_min.setSingleStep(0.01)
-        self.spin_inorg_min.setValue(0.95)
-        
-        self.spin_inorg_max = QDoubleSpinBox()
-        self.spin_inorg_max.setRange(0, 2)
-        self.spin_inorg_max.setSingleStep(0.01)
-        self.spin_inorg_max.setValue(0.99)
-        
-        self.inorg_range_layout.addWidget(QLabel("Min:"))
-        self.inorg_range_layout.addWidget(self.spin_inorg_min)
-        self.inorg_range_layout.addWidget(QLabel("Max:"))
-        self.inorg_range_layout.addWidget(self.spin_inorg_max)
-        
-        self.inorg_layout.addRow("Этап перехода:", self.spin_inorg_trans)
-        self.inorg_layout.addRow(QLabel("Диапазон:"))
-        self.inorg_layout.addRow(self.inorg_range_layout)
-        
-        self.cond_tabs.addTab(self.tab_inorganic, "Неорганика")
-        
-        # Tab 2: Ripening (Dosage)
-        self.tab_ripening = QWidget()
-        self.rip_layout = QFormLayout(self.tab_ripening)
-        
-        self.spin_rip_trans = QSpinBox()
-        self.spin_rip_trans.setRange(1, 100)
-        self.spin_rip_trans.setValue(7)
-        
-        self.rip_range_layout = QHBoxLayout()
-        self.spin_rip_min = QDoubleSpinBox()
-        self.spin_rip_min.setRange(0, 2)
-        self.spin_rip_min.setSingleStep(0.01)
-        self.spin_rip_min.setValue(1.01)
-        
-        self.spin_rip_max = QDoubleSpinBox()
-        self.spin_rip_max.setRange(0, 2)
-        self.spin_rip_max.setSingleStep(0.01)
-        self.spin_rip_max.setValue(1.07)
-        
-        self.rip_range_layout.addWidget(QLabel("Min:"))
-        self.rip_range_layout.addWidget(self.spin_rip_min)
-        self.rip_range_layout.addWidget(QLabel("Max:"))
-        self.rip_range_layout.addWidget(self.spin_rip_max)
-        
-        self.rip_layout.addRow("Этап перехода:", self.spin_rip_trans)
-        self.rip_layout.addRow(QLabel("Диапазон:"))
-        self.rip_layout.addRow(self.rip_range_layout)
-        
-        self.cond_tabs.addTab(self.tab_ripening, "Дозаривание")
-        
-        self.cond_layout.addWidget(self.cond_tabs)
-        self.settings_layout.addWidget(self.cond_group)
-        
         self.btn_run = QPushButton("Запустить сравнение")
         self.btn_run.clicked.connect(self.run_comparison)
-        self.btn_run.setFixedHeight(40)
+        self.btn_run.setFixedHeight(45) # Slightly taller
         self.settings_layout.addWidget(self.btn_run)
         
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
+        self.progress_bar.setFixedHeight(45) # Same height as button
+        self.progress_bar.setTextVisible(True)
+        self.progress_bar.setAlignment(Qt.AlignCenter)
         self.settings_layout.addWidget(self.progress_bar)
         
         self.settings_layout.addStretch()
         
-        # --- Plot Area ---
-        self.plot_widget = QWidget()
-        self.plot_layout = QVBoxLayout(self.plot_widget)
+        # --- Right Side (Visualization) ---
+        self.right_panel = QWidget()
+        self.right_layout = QVBoxLayout(self.right_panel)
+
+        # View Selector
+        self.view_selector = QComboBox()
+        self.view_selector.addItems(["График", "Гистограмма", "Общие результаты"])
+        self.view_selector.currentIndexChanged.connect(self.update_view)
+        self.right_layout.addWidget(self.view_selector)
+
+        # Stacked Widget for views
+        self.stacked_widget = QStackedWidget()
         
-        self.figure = Figure(figsize=(5, 4), dpi=100)
-        # Set figure background color to match theme (approx)
-        self.figure.patch.set_facecolor('#1E1E2E')
-        
-        self.canvas = FigureCanvas(self.figure)
-        self.plot_layout.addWidget(self.canvas)
-        
-        self.ax = self.figure.add_subplot(111)
-        self.style_plot()
+        # 1. Graph View
+        self.graph_widget = QWidget()
+        self.graph_layout = QVBoxLayout(self.graph_widget)
+        self.figure_graph = Figure(figsize=(5, 4), dpi=100)
+        self.figure_graph.patch.set_facecolor('#1E1E2E')
+        self.canvas_graph = FigureCanvas(self.figure_graph)
+        self.graph_layout.addWidget(self.canvas_graph)
+        self.ax_graph = self.figure_graph.add_subplot(111)
+        self.stacked_widget.addWidget(self.graph_widget)
+
+        # 2. Histogram View
+        self.hist_widget = QWidget()
+        self.hist_layout = QVBoxLayout(self.hist_widget)
+        self.figure_hist = Figure(figsize=(5, 4), dpi=100)
+        self.figure_hist.patch.set_facecolor('#1E1E2E')
+        self.canvas_hist = FigureCanvas(self.figure_hist)
+        self.hist_layout.addWidget(self.canvas_hist)
+        self.ax_hist = self.figure_hist.add_subplot(111)
+        self.stacked_widget.addWidget(self.hist_widget)
+
+        # 3. General Results View
+        self.results_text = QTextEdit()
+        self.results_text.setReadOnly(True)
+        self.results_text.setStyleSheet("font-size: 14px; color: #CDD6F4; background-color: #1E1E2E; border: 1px solid #45475A;")
+        self.stacked_widget.addWidget(self.results_text)
+
+        self.right_layout.addWidget(self.stacked_widget)
         
         self.layout.addWidget(self.settings_panel)
-        self.layout.addWidget(self.plot_widget)
+        self.layout.addWidget(self.right_panel)
 
-    def style_plot(self):
-        self.ax.set_facecolor('#1E1E2E')
-        self.ax.tick_params(colors='#CDD6F4')
-        self.ax.xaxis.label.set_color('#CDD6F4')
-        self.ax.yaxis.label.set_color('#CDD6F4')
-        self.ax.title.set_color('#CDD6F4')
-        for spine in self.ax.spines.values():
+        self.style_plot(self.ax_graph)
+        self.style_plot(self.ax_hist)
+        
+        self.current_results = None
+
+    def style_plot(self, ax):
+        ax.set_facecolor('#1E1E2E')
+        ax.tick_params(colors='#CDD6F4')
+        ax.xaxis.label.set_color('#CDD6F4')
+        ax.yaxis.label.set_color('#CDD6F4')
+        ax.title.set_color('#CDD6F4')
+        for spine in ax.spines.values():
             spine.set_edgecolor('#45475A')
-        self.ax.grid(True, color='#45475A', linestyle='--')
+        ax.grid(True, color='#45475A', linestyle='--')
 
     def run_comparison(self):
-        # Determine active condition parameters
-        use_cond = self.check_condition.isChecked()
-        cond_type = 'inorganic' if self.cond_tabs.currentIndex() == 0 else 'ripening'
-        
-        if cond_type == 'inorganic':
-            cond_trans = self.spin_inorg_trans.value()
-            cond_min = self.spin_inorg_min.value()
-            cond_max = self.spin_inorg_max.value()
-        else:
-            cond_trans = self.spin_rip_trans.value()
-            cond_min = self.spin_rip_min.value()
-            cond_max = self.spin_rip_max.value()
-
         params = {
             'size': self.spin_size.value(),
             'experiments': self.spin_experiments.value(),
@@ -318,15 +254,10 @@ class ComparisonPanel(QWidget):
             'sugar_min': self.spin_sugar_min.value(),
             'sugar_max': self.spin_sugar_max.value(),
             'deg_min': self.spin_deg_min.value(),
-            'deg_max': self.spin_deg_max.value(),
-            'use_condition': use_cond,
-            'condition_type': cond_type,
-            'cond_transition': cond_trans,
-            'cond_min': cond_min,
-            'cond_max': cond_max
+            'deg_max': self.spin_deg_max.value()
         }
         
-        self.btn_run.setEnabled(False)
+        self.btn_run.setVisible(False)
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
         
@@ -336,31 +267,107 @@ class ComparisonPanel(QWidget):
         self.worker.start()
 
     def on_finished(self, results):
-        self.btn_run.setEnabled(True)
+        self.btn_run.setVisible(True)
         self.progress_bar.setVisible(False)
-        self.plot_results(results)
+        self.current_results = results
+        self.update_view()
 
-    def plot_results(self, results):
-        self.ax.clear()
-        self.style_plot()
+    def update_view(self):
+        if self.current_results is None:
+            return
+            
+        index = self.view_selector.currentIndex()
+        self.stacked_widget.setCurrentIndex(index)
+        
+        if index == 0:
+            self.plot_graph(self.current_results)
+        elif index == 1:
+            self.plot_histogram(self.current_results)
+        elif index == 2:
+            self.show_general_results(self.current_results)
+
+    def plot_graph(self, results):
+        self.ax_graph.clear()
+        self.style_plot(self.ax_graph)
         
         x = np.arange(len(results['HungarianMin']))
         
         # Plotting with Catppuccin colors
-        self.ax.plot(x, results['HungarianMax'], label='Венгерский (Макс)', color='#A6E3A1', linestyle='--')
-        self.ax.plot(x, results['HungarianMin'], label='Венгерский (Мин)', color='#F38BA8', linestyle='-.')
-        self.ax.plot(x, results['Greedy'], label='Жадная', color='#F9E2AF', linestyle=':')
-        self.ax.plot(x, results['Thrifty'], label='Бережливая', color='#89B4FA')
-        self.ax.plot(x, results['GreedyThrifty'], label='Жадн/Береж', color='#CBA6F7', linestyle='--')
-        self.ax.plot(x, results['ThriftyGreedy'], label='Береж/Жадн', color='#FAB387', linestyle='-.')
+        self.ax_graph.plot(x, results['HungarianMax'], label='Венгерский (Макс)', color='#A6E3A1', linestyle='--')
+        self.ax_graph.plot(x, results['HungarianMin'], label='Венгерский (Мин)', color='#F38BA8', linestyle='-.')
+        self.ax_graph.plot(x, results['Greedy'], label='Жадная', color='#F9E2AF', linestyle=':')
+        self.ax_graph.plot(x, results['Thrifty'], label='Бережливая', color='#89B4FA')
+        self.ax_graph.plot(x, results['GreedyThrifty'], label='Жадн/Береж', color='#CBA6F7', linestyle='--')
+        self.ax_graph.plot(x, results['ThriftyGreedy'], label='Береж/Жадн', color='#FAB387', linestyle='-.')
         
-        self.ax.set_title("Средние значения алгоритмов на каждом этапе")
-        self.ax.set_xlabel("Этап (столбец)")
-        self.ax.set_ylabel("Накопленная стоимость")
+        self.ax_graph.set_title("Средние значения алгоритмов на каждом этапе")
+        self.ax_graph.set_xlabel("Этап (столбец)")
+        self.ax_graph.set_ylabel("Накопленная стоимость")
         
-        legend = self.ax.legend()
+        legend = self.ax_graph.legend()
         plt.setp(legend.get_texts(), color='#CDD6F4')
         legend.get_frame().set_facecolor('#313244')
         legend.get_frame().set_edgecolor('#45475A')
         
-        self.canvas.draw()
+        self.canvas_graph.draw()
+
+    def plot_histogram(self, results):
+        self.ax_hist.clear()
+        self.style_plot(self.ax_hist)
+        
+        labels = ['Венг. (Макс)', 'Венг. (Мин)', 'Жадная', 'Бережливая', 'Жадн/Береж', 'Береж/Жадн']
+        final_values = [
+            results['HungarianMax'][-1],
+            results['HungarianMin'][-1],
+            results['Greedy'][-1],
+            results['Thrifty'][-1],
+            results['GreedyThrifty'][-1],
+            results['ThriftyGreedy'][-1]
+        ]
+        
+        colors = ['#A6E3A1', '#F38BA8', '#F9E2AF', '#89B4FA', '#CBA6F7', '#FAB387']
+        
+        bars = self.ax_hist.bar(labels, final_values, color=colors)
+        
+        self.ax_hist.set_title("Итоговые значения алгоритмов")
+        self.ax_hist.set_ylabel("Итоговая стоимость")
+        
+        # Rotate labels for better visibility
+        self.ax_hist.set_xticklabels(labels, rotation=45, ha='right')
+        
+        self.canvas_hist.draw()
+
+    def show_general_results(self, results):
+        final_values = {
+            'Венгерский (Максимум)': results['HungarianMax'][-1],
+            'Венгерский (Минимум)': results['HungarianMin'][-1],
+            'Жадная стратегия': results['Greedy'][-1],
+            'Бережливая стратегия': results['Thrifty'][-1],
+            'Жадная -> Бережливая': results['GreedyThrifty'][-1],
+            'Бережливая -> Жадная': results['ThriftyGreedy'][-1]
+        }
+        
+        # Exclude Hungarian Max from best strategy calculation
+        heuristic_values = final_values.copy()
+        if 'Венгерский (Максимум)' in heuristic_values:
+            del heuristic_values['Венгерский (Максимум)']
+            
+        best_strategy = max(heuristic_values, key=heuristic_values.get)
+        best_value = heuristic_values[best_strategy]
+        
+        text = f"""
+        <h2 style="color: #cba6f7">Общие результаты экспериментов</h2>
+        <p>Согласно проделанным экспериментам можно сделать следующие выводы:</p>
+        <ul>
+        """
+        
+        for strategy, value in final_values.items():
+            text += f"<li><b>{strategy}:</b> {value:.2f}</li>"
+            
+        text += f"""
+        </ul>
+        <p>Наилучший результат виртуального эксперимента — <b style="color: #a6e3a1">{best_strategy}</b> ({best_value:.2f}).</p>
+        <p>Согласно генеральному эксперименту в следующем сезоне предлагается применить <b style="color: #a6e3a1">{best_strategy}</b>.</p>
+        """
+        
+        self.results_text.setHtml(text)

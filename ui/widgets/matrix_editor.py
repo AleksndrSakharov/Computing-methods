@@ -109,11 +109,11 @@ class MatrixEditorPanel(QWidget):
         n = self.size_spinbox.value()
         # Используем существующий MatrixGenerator
         generator = MatrixGenerator.MatrixGenerator(None)
-        matrix = generator.GenerateMatrix(size=n)
+        matrix = generator.GenerateUniformMatrix(size=n)
         
         for i in range(n):
             for j in range(n):
-                item = QTableWidgetItem(str(matrix[i, j]))
+                item = QTableWidgetItem(f"{matrix[i, j]:.2f}")
                 item.setTextAlignment(Qt.AlignCenter)
                 self.table.setItem(i, j, item)
 
@@ -123,10 +123,13 @@ class MatrixEditorPanel(QWidget):
         for i in range(n):
             for j in range(n):
                 item = self.table.item(i, j)
-                if item and item.text().isdigit():
-                    matrix[i, j] = int(item.text())
+                if item:
+                    try:
+                        matrix[i, j] = float(item.text())
+                    except ValueError:
+                        matrix[i, j] = 0.0
                 else:
-                    matrix[i, j] = 0
+                    matrix[i, j] = 0.0
         return matrix
 
     def load_matrix(self):
@@ -134,13 +137,13 @@ class MatrixEditorPanel(QWidget):
         fileName, _ = QFileDialog.getOpenFileName(self, "Загрузить матрицу", "", "Text Files (*.txt);;All Files (*)", options=options)
         if fileName:
             try:
-                matrix = np.loadtxt(fileName, dtype=int)
+                matrix = np.loadtxt(fileName, dtype=float)
                 if len(matrix.shape) == 2 and matrix.shape[0] == matrix.shape[1]:
                     n = matrix.shape[0]
                     self.size_spinbox.setValue(n)
                     for i in range(n):
                         for j in range(n):
-                            item = QTableWidgetItem(str(matrix[i, j]))
+                            item = QTableWidgetItem(f"{matrix[i, j]:.2f}")
                             item.setTextAlignment(Qt.AlignCenter)
                             self.table.setItem(i, j, item)
             except Exception as e:
@@ -151,4 +154,4 @@ class MatrixEditorPanel(QWidget):
         fileName, _ = QFileDialog.getSaveFileName(self, "Сохранить матрицу", "", "Text Files (*.txt);;All Files (*)", options=options)
         if fileName:
             matrix = self.get_matrix()
-            np.savetxt(fileName, matrix, fmt='%d')
+            np.savetxt(fileName, matrix, fmt='%.2f')
