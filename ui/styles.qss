@@ -73,6 +73,65 @@ QSpinBox:focus, QLineEdit:focus, QTextEdit:focus {
     background-color: #1E1E2E;
 }
 
+/* ComboBox - Modern Design */
+QComboBox {
+    background-color: #181825;
+    border: 2px solid #45475A;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13pt; /* Larger font */
+    color: #CDD6F4;
+    min-height: 40px; /* Taller */
+    font-weight: 600;
+}
+
+QComboBox:hover {
+    border-color: #585B70;
+    background-color: #1E1E2E;
+}
+
+QComboBox:on { /* When the popup is open */
+    border-color: #89B4FA;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 30px;
+    border-left-width: 0px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+QComboBox::down-arrow {
+    image: url(ui/resources/down_arrow.svg);
+    width: 16px;
+    height: 16px;
+}
+
+/* Dropdown Menu */
+QComboBox QAbstractItemView {
+    background-color: #1E1E2E;
+    border: 2px solid #45475A;
+    border-radius: 8px;
+    selection-background-color: #313244;
+    selection-color: #89B4FA;
+    outline: none;
+    padding: 4px;
+    font-size: 13pt;
+}
+
+QComboBox QAbstractItemView::item {
+    padding: 10px 12px; /* More breathing room */
+    min-height: 35px;
+    border-radius: 4px;
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background-color: #313244;
+    color: #89B4FA;
+}
+
 /* SpinBox Buttons */
 QSpinBox::up-button, QSpinBox::down-button {
     subcontrol-origin: border;
@@ -204,16 +263,18 @@ QTabWidget::pane {
 QTabBar::tab {
     background-color: transparent;
     color: #A6ADC8;
-    padding: 8px 12px; /* Уменьшил горизонтальные отступы, чтобы длинный текст влезал */
-    border-bottom: 2px solid transparent;
-    font-weight: 600;
+    padding: 10px 20px;
+    border-bottom: 3px solid transparent;
+    font-weight: bold;
+    font-size: 12pt;
     margin-right: 4px;
-    min-width: 80px; /* Минимальная ширина вкладки */
+    min-width: 120px;
+    alignment: center;
 }
 
 QTabBar::tab:selected {
     color: #89B4FA;
-    border-bottom: 2px solid #89B4FA;
+    border-bottom: 3px solid #89B4FA;
 }
 
 QTabBar::tab:hover {
@@ -266,27 +327,76 @@ QGroupBox::title {
     left: 0px;
 }
 
-/* Scrollbars */
+/* Scrollbars - Modern & Sleek */
 QScrollBar:vertical {
     border: none;
-    background: #181825;
-    width: 10px;
-    margin: 0;
-    border-radius: 5px;
+    background: #181825; /* Mantle */
+    width: 12px;
+    margin: 0px;
+    border-radius: 6px;
 }
 
 QScrollBar::handle:vertical {
-    background: #585B70;
-    min-height: 20px;
-    border-radius: 5px;
+    background: #45475A; /* Surface1 */
+    min-height: 30px;
+    border-radius: 6px;
+    margin: 2px; /* Creates a floating effect */
 }
 
 QScrollBar::handle:vertical:hover {
-    background: #6C7086;
+    background: #585B70; /* Surface2 */
+}
+
+QScrollBar::handle:vertical:pressed {
+    background: #89B4FA; /* Blue accent */
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+/* Horizontal Scrollbar */
+QScrollBar:horizontal {
+    border: none;
+    background: #181825;
+    height: 12px;
+    margin: 0px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #45475A;
+    min-width: 30px;
+    border-radius: 6px;
+    margin: 2px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #585B70;
+}
+
+QScrollBar::handle:horizontal:pressed {
+    background: #89B4FA;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+    background: none;
+}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
+}
+
+/* Corner where scrollbars meet */
+QAbstractScrollArea::corner {
+    background: #181825;
+    border: none;
 }
 
 /* Splitter */

@@ -25,39 +25,13 @@ class VisualizationTabs(QWidget):
         self.tab_matrix_layout.addWidget(self.vis_matrix_table)
         self.tabs.addTab(self.tab_matrix, "Матрица (визуализация)")
         
-        # --- Вкладка 2: График ---
-        self.tab_graph = QWidget()
-        self.tab_graph_layout = QVBoxLayout(self.tab_graph)
-        self.graph_view = QGraphicsView()
-        self.graph_scene = QGraphicsScene()
-        self.graph_view.setScene(self.graph_scene)
-        self.tab_graph_layout.addWidget(self.graph_view)
-        self.tabs.addTab(self.tab_graph, "График")
-        
-        # --- Вкладка 3: Гистограмма ---
-        self.tab_gisto = QWidget()
-        self.tab_gisto_layout = QVBoxLayout(self.tab_gisto)
-        self.gisto_view = QGraphicsView()
-        self.tab_gisto_layout.addWidget(self.gisto_view)
-        self.tabs.addTab(self.tab_gisto, "Гистограмма")
-        
         self.layout.addWidget(self.tabs)
 
     def resizeEvent(self, event):
         """
         Динамическое изменение размера шрифта вкладок при изменении ширины окна.
         """
-        width = self.width()
-        font_size = 11 # Базовый размер
-        
-        if width < 600:
-            font_size = 9
-        elif width < 800:
-            font_size = 10
-            
-        # Применяем локальный стиль для изменения шрифта
-        self.tabs.setStyleSheet(f"QTabBar::tab {{ font-size: {font_size}pt; height: 30px; }}")
-        
+        # Удалена логика уменьшения шрифта, чтобы соответствовать глобальному стилю
         super().resizeEvent(event)
 
     def update_matrix_visualization(self, state):
@@ -92,7 +66,7 @@ class VisualizationTabs(QWidget):
         for r in range(n):
             for c in range(n):
                 val = matrix[r, c]
-                item = QTableWidgetItem(str(int(val)))
+                item = QTableWidgetItem(f"{val:.2f}")
                 item.setTextAlignment(Qt.AlignCenter)
                 item.setForeground(QBrush(color_text))
                 
@@ -111,7 +85,7 @@ class VisualizationTabs(QWidget):
                 if stars[r, c]:
                     # Звезды: Желтый текст, фон остается прежним (или покрытым)
                     item.setForeground(QBrush(color_star))
-                    item.setText(f"{int(val)} ★")
+                    item.setText(f"{val:.2f} ★")
                 elif primes[r, c]:
                     # Зачеркнутые нули: Белый текст
                     item.setForeground(QBrush(color_prime))
