@@ -24,19 +24,20 @@ class MatrixGenerator:
         if not (0.85 <= beta1 < beta2 <= 1.0):
                 raise ValueError("beta1 and beta2 must be in range [0.85, 1.0]")
                 
-    def generate_matrices(self, distribution_type: str = "uniform") -> Dict[str, np.array]:
-        a_vector, b_matrix = self._init_small_experiment(distribution_type)
-        return {
-            'a_vector': a_vector,
-            'b_matrix': b_matrix,
-            'parameters': {
-                'n': self.n,
-                'v': self.v,
-                'distribution_type': distribution_type
-            }
-        }
+    def Generate_C_Matrix(self, distribution_type: str = "uniform") -> np.array:
+    a_vector, b_matrix = self.Generate_ab_Matrices(distribution_type)
+    
+    n, v = b_matrix.shape
+    c_matrix = np.zeros((n, v))
+    
+    c_matrix[:, 0] = a_vector # c_i1 = a_i
+    
+    for j in range(1, v):
+        c_matrix[:, j] = c_matrix[:, j-1] * b_matrix[:, j-1]
+    
+    return c_matrix
     @private
-    def _init_small_experiment(self, distribution_type: str) -> Tuple[np.array, np.array]:
+    def Generate_ab_Matrices(self, distribution_type: str) -> Tuple[np.array, np.array]:
         a_vector = np.array([np.random.uniform(self.a_min, self.a_max) for _ in range(self.n)])  # вектор начальной сахаристости
 
         if distribution_type == "uniform":
@@ -54,6 +55,6 @@ class MatrixGenerator:
                 for j in range(self.v):
                     b_matrix[i][j] = np.random.uniform(beta1_i, beta2_i)
         else:
-            raise ValueError("distribution_type must be 'uniform' or 'concentrated'")
+            raise ValueError("Distribution_type must be 'uniform' or 'concentrated'")
         
         return a_vector, b_matrix
